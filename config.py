@@ -1,0 +1,2 @@
+DBUSER = JJ
+DBPASSWORD = jems101

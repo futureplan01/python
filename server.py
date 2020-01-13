@@ -1,13 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
+import db
 import sys
 import os
 import copy
 
 app = Flask(__name__)
-
-app.config["MONGO_URI"] = "mongodb://jj:jems101@ds139934.mlab.com:39934/escape-db?retryWrites=false"
-mongo = PyMongo(app)
 
 EventRecord = {
     "Category": None,
@@ -28,6 +26,7 @@ EventRecord = {
 
 
 def placeInDataBase ():
+    
     """Read Text file from directory and places the data into a database"""
     filename = sys.argv[1]
     if not os.path.isfile(filename):
@@ -36,6 +35,7 @@ def placeInDataBase ():
         file = open(filename)
         line = file.readline()
         count = 1
+        mongo = db.getMongo()
         while line:
             EventList = line.split("|")
             NewRecord = copy.deepcopy(EventRecord)
@@ -64,6 +64,7 @@ def index():
 @app.route('/all-events')
 def getData():
     """Returns all events in the Database"""
+    mongo = db.getMongo()
     query = mongo.db.users.find()
     #Json Object
     payload = []
@@ -80,6 +81,7 @@ def getData():
 @app.route('/get-countries')
 def getCountry():
     """Select all distinct countries in our database"""
+    mongo = db.getMongo()
     query = mongo.db.users.distinct("Country")
     return jsonify(query)
 
@@ -88,6 +90,7 @@ def getCountry():
 @app.route('/country-events')
 def countryEvents():
     """Needs Country Name, Gets all events for that country"""
+    mongo = db.getMongo()
     country = request.form.get('Country') # if key doesn't exist, returns None
     print(type(country))
     query = mongo.db.users.find({"Country": country})
