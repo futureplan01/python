@@ -23,7 +23,10 @@ EventRecord = {
     "Booking Url" : None,
     "Email": None,
 }
-filename = sys.argv[1]
+
+def getFile():
+    filename = sys.argv[1]
+
 
 def placeInDataBase (filename):
 
@@ -59,15 +62,18 @@ def index():
     return '<h1> Hello JJ </h1>'
 
 @app.route('/data')
-def detData():
+def getData():
     #Returns Cursor Object 
     query = mongo.db.users.find()
     #Json Object
     payload = []
+
+
     for doc in query:
-        content = {'id' : doc[0], 'Category': doc[1], 'Country': doc[2], 
-        'Address': doc[3], 'LatLong':doc[4], 'Event':doc[5], 'Days': doc[6], 
-        'Hours': doc[7], 'Price':doc[8], 'BookingUrl':doc[9], 'Email': doc[10]}
+        print(doc)
+        content = {'id' : doc['_id'].__str__(), 'Category': doc['Category'], 'Country': doc['Country'], 
+        'Address': doc['Address'], 'LatLong':doc['LatLong'], 'Event':doc['Event'], 'Days': doc['Days'], 
+        'Hours': doc['Hours'], 'Price':doc['Price'], 'BookingUrl':doc['BookingUrl'], 'Email': doc['Email']}
         payload.append(content)
         content = {}
     return jsonify(payload)
