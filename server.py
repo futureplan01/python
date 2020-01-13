@@ -1,5 +1,4 @@
-from flask import Flask, jsonify
-from flask import request
+from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 import sys
 import os
@@ -24,11 +23,13 @@ EventRecord = {
     "Email": None,
 }
 
-def getFile():
+
+
+
+
+def placeInDataBase ():
+    """Read Text file from directory and places the data into a database"""
     filename = sys.argv[1]
-
-
-def placeInDataBase (filename):
     if not os.path.isfile(filename):
         print("File Path {} does not exist. Exiting... ".format(filename))
     else:
@@ -62,7 +63,7 @@ def index():
 
 @app.route('/all-events')
 def getData():
-    #Returns Cursor Object 
+    """Returns all events in the Database"""
     query = mongo.db.users.find()
     #Json Object
     payload = []
@@ -75,16 +76,18 @@ def getData():
         content = {}
     return jsonify(payload)
 
-#Get List Of Countries in the Database
+
 @app.route('/get-countries')
 def getCountry():
+    """Select all distinct countries in our database"""
     query = mongo.db.users.distinct("Country")
     return jsonify(query)
 
 
-#Needs Country Name, Gets all events for that country
+
 @app.route('/country-events')
 def countryEvents():
+    """Needs Country Name, Gets all events for that country"""
     country = request.form.get('Country') # if key doesn't exist, returns None
     print(type(country))
     query = mongo.db.users.find({"Country": country})
