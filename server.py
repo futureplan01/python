@@ -1,8 +1,9 @@
-from flask import Flask 
+from flask import Flask, jsonify
 from flask import request
 from flask_pymongo import PyMongo
 import sys
 import os
+import copy
 
 app = Flask(__name__)
 
@@ -28,25 +29,25 @@ def placeInDataBase (filename):
 
     if not os.path.isfile(filename):
         print("File Path {} does not exist. Exiting... ".format(filename))
-        sys.exit()
     else:
         file = open(filename)
         line = file.readline()
         count = 1
         while line:
             EventList = line.split("|")
-            EventRecord["Category"] = EventList[0]
-            EventRecord["Country"]  = EventList[1]
-            EventRecord["Address"]  = EventList[2]
-            EventRecord["LatLong"]  = EventList[3]
-            EventRecord["Event"]    = EventList[4]
-            EventRecord["Days"]     = EventList[5]
-            EventRecord["Hours"]    = EventList[6]
-            EventRecord["Price"]    = EventList[7]
-            EventRecord["Phone"]    = EventList[8]
-            EventRecord["BookingUrl"] = EventList[9]
-            EventRecord["Email"]      = EventList[10]
-            print(EventRecord)
+            NewRecord = copy.deepcopy(EventRecord)
+            NewRecord["Category"] = EventList[0]
+            NewRecord["Country"]  = EventList[1]
+            NewRecord["Address"]  = EventList[2]
+            NewRecord["LatLong"]  = EventList[3]
+            NewRecord["Event"]    = EventList[4]
+            NewRecord["Days"]     = EventList[5]
+            NewRecord["Hours"]    = EventList[6]
+            NewRecord["Price"]    = EventList[7]
+            NewRecord["Phone"]    = EventList[8]
+            NewRecord["BookingUrl"] = EventList[9]
+            NewRecord["Email"]      = EventList[10]
+            mongo.db.users.insert_one(NewRecord)
             line = file.readline()
             count+=1
 
@@ -55,8 +56,21 @@ def placeInDataBase (filename):
 
 @app.route('/')
 def index():
-    placeInDataBase(filename)
     return '<h1> Hello JJ </h1>'
+
+@app.route('/data')
+def detData():
+    #Returns Cursor Object 
+    query = mongo.db.users.find()
+    #Json Object
+    payload = []
+    for doc in query:
+        content = {'id' : doc[0], 'Category': doc[1], 'Country': doc[2], 
+        'Address': doc[3], 'LatLong':doc[4], 'Event':doc[5], 'Days': doc[6], 
+        'Hours': doc[7], 'Price':doc[8], 'BookingUrl':doc[9], 'Email': doc[10]}
+        payload.append(content)
+        content = {}
+    return jsonify(payload)
 
 @app.route('/user/<name>')
 def user(name):
