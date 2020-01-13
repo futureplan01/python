@@ -1,2 +1,2 @@
-DBUSER = JJ
-DBPASSWORD = jems101
+DBUSER = "jj"
+DBPASSWORD = "jems101"
