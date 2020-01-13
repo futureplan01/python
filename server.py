@@ -29,7 +29,6 @@ def getFile():
 
 
 def placeInDataBase (filename):
-
     if not os.path.isfile(filename):
         print("File Path {} does not exist. Exiting... ".format(filename))
     else:
@@ -61,14 +60,12 @@ def placeInDataBase (filename):
 def index():
     return '<h1> Hello JJ </h1>'
 
-@app.route('/data')
+@app.route('/all-events')
 def getData():
     #Returns Cursor Object 
     query = mongo.db.users.find()
     #Json Object
     payload = []
-
-
     for doc in query:
         print(doc)
         content = {'id' : doc['_id'].__str__(), 'Category': doc['Category'], 'Country': doc['Country'], 
@@ -78,16 +75,28 @@ def getData():
         content = {}
     return jsonify(payload)
 
-@app.route('/user/<name>')
-def user(name):
-    return '<h1>Hello, {}!</h1>'.format(name)
+#Get List Of Countries in the Database
+@app.route('/get-countries')
+def getCountry():
+    query = mongo.db.users.distinct("Country")
+    return jsonify(query)
 
-@app.route('/data', methods=['GET', 'POST'])
-def data():
-    if request.method == 'POST':
-        print(request.form['value'])
-        print(request.form['print'])
-        return "Got it working"
+
+#Needs Country Name, Gets all events for that country
+@app.route('/country-events')
+def countryEvents():
+    country = request.form.get('Country') # if key doesn't exist, returns None
+    print(type(country))
+    query = mongo.db.users.find({"Country": country})
+    print(query)
+    payload = []
+    for doc in query:
+        content = {'id' : doc['_id'].__str__(), 'Category': doc['Category'], 'Country': doc['Country'], 
+        'Address': doc['Address'], 'LatLong':doc['LatLong'], 'Event':doc['Event'], 'Days': doc['Days'], 
+        'Hours': doc['Hours'], 'Price':doc['Price'], 'BookingUrl':doc['BookingUrl'], 'Email': doc['Email']}
+        payload.append(content)
+    return jsonify(payload)
+
 
 if __name__ == "__main__":
     app.run()
