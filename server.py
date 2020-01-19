@@ -25,8 +25,6 @@ EventRecord = {
 
 
 
-
-
 def placeInDataBase ():
     
     """Read Text file from directory and places the data into a database"""
