@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
+from flask_api import status
 from flask_cors import CORS
 import db
 import sys
@@ -91,9 +92,21 @@ def getCountry():
 def countryEvents():
     """Needs Country Name, Gets all events for that country"""
     mongo = db.getMongo()
-    country = request.form.get('Country') # if key doesn't exist, returns None
-    print(type(country))
-    query = mongo.db.users.find({"Country": country})
+
+    # gets form data
+    # if key doesn't exist, returns None
+    country = request.form.get('Country')
+    category = request.form.get('Category')
+    print("Country: ", country)
+    print("Categoy: ", category)
+    if country == None:
+        return status.HTTP_400_BAD_REQUEST
+
+    if category == None or category == "All":
+        query = mongo.db.users.find({"Country": country})
+    else:
+        query = mongo.db.users.find({"Country": country, "Category": category})
+
     print(query)
     payload = []
     for doc in query:
