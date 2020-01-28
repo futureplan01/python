@@ -88,33 +88,33 @@ def getCountry():
 
 
 
-@app.route('/country-events')
+@app.route('/country-events', methods = ['POST', 'GET'])
 def countryEvents():
-    """Needs Country Name, Gets all events for that country"""
-    mongo = db.getMongo()
+    if request.method == 'POST':
+        """Needs Country Name, Gets all events for that country"""
+        mongo = db.getMongo()
+        # gets form data
+        # if key doesn't exist, returns None
+        country = request.form.get('Country')
+        category = request.form.get('Category')
+        print("Country: ", country)
+        print("Categoy: ", category)
+        if country == None:
+            return status.HTTP_400_BAD_REQUEST
 
-    # gets form data
-    # if key doesn't exist, returns None
-    country = request.form.get('Country')
-    category = request.form.get('Category')
-    print("Country: ", country)
-    print("Categoy: ", category)
-    if country == None:
-        return status.HTTP_400_BAD_REQUEST
+        if category == None or category == "All":
+            query = mongo.db.users.find({"Country": country})
+        else:
+            query = mongo.db.users.find({"Country": country, "Category": category})
 
-    if category == None or category == "All":
-        query = mongo.db.users.find({"Country": country})
-    else:
-        query = mongo.db.users.find({"Country": country, "Category": category})
-
-    print(query)
-    payload = []
-    for doc in query:
-        content = {'id' : doc['_id'].__str__(), 'Category': doc['Category'], 'Country': doc['Country'], 
-        'Address': doc['Address'], 'LatLong':doc['LatLong'], 'Event':doc['Event'], 'Days': doc['Days'], 
-        'Hours': doc['Hours'], 'Price':doc['Price'], 'BookingUrl':doc['BookingUrl'], 'Email': doc['Email']}
-        payload.append(content)
-    return jsonify(payload)
+        print(query)
+        payload = []
+        for doc in query:
+            content = {'id' : doc['_id'].__str__(), 'Category': doc['Category'], 'Country': doc['Country'], 
+            'Address': doc['Address'], 'LatLong':doc['LatLong'], 'Event':doc['Event'], 'Days': doc['Days'], 
+            'Hours': doc['Hours'], 'Price':doc['Price'], 'BookingUrl':doc['BookingUrl'], 'Email': doc['Email']}
+            payload.append(content)
+        return jsonify(payload)
 
 
 if __name__ == "__main__":
