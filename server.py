@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from flask_api import status
 from flask_cors import CORS
+import requests
 import db
 import sys
 import os
@@ -23,7 +24,6 @@ EventRecord = {
     "Booking Url" : None,
     "Email": None,
 }
-
 
 
 def placeInDataBase ():
@@ -86,7 +86,18 @@ def getCountry():
     query = mongo.db.users.distinct("Country")
     return jsonify(query)
 
+@app.route('/tripify')
+def getTripify():
+    url = "https://tripadvisor1.p.rapidapi.com/locations/search"
+    querystring={"location_id":"1", "limit":"30", "sort":"relevance", "offset":"0","lang":"en_US","currency":"USD","units":"km","query":"Iceland"}
 
+    headers = {
+        'x-rapidapi-host': "tripadvisor1.p.rapidapi.com",
+        'x-rapidapi-key': "2a5f001934msh599ca02108c760bp1123ebjsn5f84d9230540"
+    }
+
+    response = requests.request("GET",url,headers=headers,params=querystring)
+    return response.text
 
 @app.route('/country-events', methods = ['POST', 'GET'])
 def countryEvents():
