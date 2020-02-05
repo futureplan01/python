@@ -12,7 +12,7 @@ import copy
 
 app = Flask(__name__)
 CORS(app)
-bcrypt = Bcrypt(app)
+f_bcrypt = Bcrypt(app)
 
 EventRecord = {
     "Category": None,
@@ -104,7 +104,7 @@ def signUp():
         mongo = authDB.getMongo()
         query = mongo.db.users.find_one({"email": email})
         if query == None :
-            pw_hash = bcrypt.generate_password_hash(password)
+            pw_hash = f_bcrypt.generate_password_hash(password, 10)
             document = {
                 "name": name,
                 "email": email,
@@ -120,10 +120,14 @@ def signUp():
 def login():
     if(request.method == 'POST'):
         email = request.form.get('email')
-        password  = request.form.get('name')
+        password  = request.form.get('password')
         mongo = authDB.getMongo()
-        query = mongo.db.users.find({"email": email, "password": password})
-        return status.HTTP_200_OK
+        query = mongo.db.users.find_one({"email": email, "password": password})
+        if query == None:
+            return "User Does Not Exist", status.HTTP_400_BAD_REQUEST
+        else:
+            if f_bcrypt.check_password_hash(query.password, password):
+                return "Valid", status.HTTP_200_OK
 
 
     
