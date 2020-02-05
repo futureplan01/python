@@ -102,8 +102,8 @@ def signUp():
         name = request.form.get('name')
         password  = request.form.get('password')
         mongo = authDB.getMongo()
-        user = mongo.db.users.find({"email": email})
-        if user == None :
+        query = mongo.db.users.find_one({"email": email})
+        if query == None :
             pw_hash = bcrypt.generate_password_hash(password)
             document = {
                 "name": name,
@@ -122,7 +122,7 @@ def login():
         email = request.form.get('email')
         password  = request.form.get('name')
         mongo = authDB.getMongo()
-        user = mongo.db.users.find({"email": email, "password": password})
+        query = mongo.db.users.find({"email": email, "password": password})
         return status.HTTP_200_OK
 
 
