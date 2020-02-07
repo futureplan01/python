@@ -3,8 +3,13 @@ from flask_pymongo import PyMongo
 from flask_api import status
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 import requests
 import eventDB
+import datetime
 import authDB
 import sys
 import os
@@ -13,6 +18,8 @@ import copy
 app = Flask(__name__)
 CORS(app)
 f_bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+app.config['JWT_SECRET_KEY'] = 'super-secret'
 
 EventRecord = {
     "Category": None,
@@ -111,23 +118,26 @@ def signUp():
                 "password": pw_hash
             }
             mongo.db.users.insert_one(document)
-            return "Successful", status.HTTP_200_OK
+            return jsonify({"msg": "Success"}), status.HTTP_200_OK
             
         else:
-            return "User Exist Already", status.HTTP_400_BAD_REQUEST
+            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
 
-@app.route('/log-in', methods = ['POST', 'GET'])
+@app.route('/login', methods = ['POST', 'GET'])
 def login():
     if(request.method == 'POST'):
         email = request.form.get('email')
         password  = request.form.get('password')
+
         mongo = authDB.getMongo()
-        query = mongo.db.users.find_one({"email": email, "password": password})
+        query = mongo.db.users.find_one({"email": email})
         if query == None:
-            return "User Does Not Exist", status.HTTP_400_BAD_REQUEST
+            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
         else:
-            if f_bcrypt.check_password_hash(query.password, password):
-                return "Valid", status.HTTP_200_OK
+            if f_bcrypt.check_password_hash(query['password'], password):
+                access_token = create_access_token(identity = query["_id"].__str__())
+
+                return jsonify(access_token=access_token), status.HTTP_200_OK
 
 
     
