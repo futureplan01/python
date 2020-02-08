@@ -60,6 +60,7 @@ def login():
             return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
         else:
             if f_bcrypt.check_password_hash(query['password'], password):
+                access_token = create_access_token(identity = query["_id"].__str__())
                 return jsonify(access_token=access_token), status.HTTP_200_OK
             else:
                 return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
