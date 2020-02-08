@@ -15,25 +15,55 @@ import sys
 import os
 import copy
 
-app = Flask(__name__)
+app = Flask(__name__,instance_relative_config=True)
+app.config.from_object('config')
+config = app.config.from_pyfile('config.py')
+
 CORS(app)
 f_bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
-app.config['JWT_SECRET_KEY'] = 'super-secret'
+app.config['JWT_SECRET_KEY'] = app.config['JWT']
 
-EventRecord = {
-    "Category": None,
-    "Country" : None,
-    "Address" : None,
-    "LatLong" : None,
-    "Event" : None,    
-    "Days" : None,
-    "Hours": None,
-    "Price" : None,
-    "Phone Number": None,
-    "Booking Url" : None,
-    "Email": None,
-}
+
+#AUTHENTICATION 
+@app.route('/sign-up', methods = ['POST', 'GET'])
+def signUp():
+    if(request.method == 'POST'):
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password  = request.form.get('password')
+        mongo = authDB.getMongo()
+        query = mongo.db.users.find_one({"email": email})
+        if query == None :
+            pw_hash = f_bcrypt.generate_password_hash(password, 10)
+            document = {
+                "name": name,
+                "email": email,
+                "password": pw_hash
+            }
+            mongo.db.users.insert_one(document)
+            return jsonify({"msg": "Success"}), status.HTTP_200_OK
+            
+        else:
+            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
+
+@app.route('/login', methods = ['POST', 'GET'])
+def login():
+    if(request.method == 'POST'):
+        email = request.form.get('email')
+        password  = request.form.get('password')
+
+        mongo = authDB.getMongo()
+        query = mongo.db.users.find_one({"email": email})
+        if query == None:
+            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
+        else:
+            if f_bcrypt.check_password_hash(query['password'], password):
+                access_token = create_access_token(identity = query["_id"].__str__())
+                return jsonify(access_token=access_token), status.HTTP_200_OK
+            else:
+                return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
+
 
 
 def placeInDataBase ():
@@ -99,47 +129,6 @@ def getUsers():
         payload.append(content)
         content= {}
     return jsonify(payload)
-
-
-#AUTHENTICATION 
-@app.route('/sign-up', methods = ['POST', 'GET'])
-def signUp():
-    if(request.method == 'POST'):
-        email = request.form.get('email')
-        name = request.form.get('name')
-        password  = request.form.get('password')
-        mongo = authDB.getMongo()
-        query = mongo.db.users.find_one({"email": email})
-        if query == None :
-            pw_hash = f_bcrypt.generate_password_hash(password, 10)
-            document = {
-                "name": name,
-                "email": email,
-                "password": pw_hash
-            }
-            mongo.db.users.insert_one(document)
-            return jsonify({"msg": "Success"}), status.HTTP_200_OK
-            
-        else:
-            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
-
-@app.route('/login', methods = ['POST', 'GET'])
-def login():
-    if(request.method == 'POST'):
-        email = request.form.get('email')
-        password  = request.form.get('password')
-
-        mongo = authDB.getMongo()
-        query = mongo.db.users.find_one({"email": email})
-        if query == None:
-            return jsonify({"msg": "User Already Exist"}), status.HTTP_400_BAD_REQUEST
-        else:
-            if f_bcrypt.check_password_hash(query['password'], password):
-                access_token = create_access_token(identity = query["_id"].__str__())
-
-                return jsonify(access_token=access_token), status.HTTP_200_OK
-
-
     
 @app.route('/get-countries')
 def getCountry():
